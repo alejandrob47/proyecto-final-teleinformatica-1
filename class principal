@@ -1,0 +1,115 @@
+import random
+!pip install deap #instalamos la libreria deap
+
+from deap import base
+from deap import creator
+from deap import tools
+import math
+import numpy as np
+from deap import algorithms
+import matplotlib.pyplot as plt
+random.seed(0)
+
+
+x = [random.uniform(-100,100) for i in range (10)]
+y = [random.uniform(-100,100) for i in range (10)]
+
+print (x)
+#print (y)
+
+#DEFINICION DE VARIABLES
+horas_disponibles = 8
+horas_curso = 4
+Disponibilidad_semanal_docentes = 40
+
+#CREACIÓN DEL PROBLEMA
+creator.create("FitnessMax", base.Fitness, weights=(1.0,)) 
+ #parametros(maximizandoLaFuncion, hereda de la clase base.fitness, indicamos la cantidad de objetivos)
+ 
+ #CREACIÓN DE LA PLANTILLA DE INDIVIDUO
+creator.create("Individual", list, fitness=creator.FitnessMax) #creamos la clase Individual, que hereda de la clase lista (por 
+                                                               #lo tanto, tiene todos los métodos de una lista) y que con- 
+                                                               #tiene el atributo fitness, el cual ha sido inicializado con el 
+                                                               #objeto FitnessMax creado en la anterior línea. Es decir, el 
+                                                               #individuo será una lista que tiene un atributo fitness que 
+                                                               #almacenará la calidad o desempeño de estos
+                                                               
+                                                               
+#CREACION DE INDIVIDUOS ALEATORIOS Y POBLACIÓN INICIAL
+toolbox = base.Toolbox()                                       #Este objeto permite registrar funciones que se utilizarán 
+                                                               #durante la operación del algoritmo genético. El registro de 
+                                                               #funciones se realiza mediante el método register de la clase base.Toolbox.
+
+toolbox.register("attr_uniforn", random.randint, 1, 6)    #el método register, nos permite registrar una
+                                                               #función, que será un método del objeto toolbox, en la caja 
+                                                               #de herramientas mediante un alias. Después del alias, se 
+                                                               #debe indicar la función a la que se llamará cuando se uti- 
+                                                               #lice el método y, a continuación, los parámetros que se le 
+                                                               #pasan a la función (si existe alguno).
+toolbox.attr_uniforn()
+
+#CREACION DEL INDIVIDUO
+toolbox.register("attr", crea_individuo,1, 7,7)
+toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.attr) #los parametros son nombre de la funcion, 
+                                                                                              #tools.repeat permite ejecutar n veces la funcion de creacion del gen
+                                                                                              #create.individual objeto que define el tipo de dato donde se almacenara el gen
+                                                                                              #toolbox.attr_uniforn funcion de creacion del gen
+                                                                                              #n, número de veces que se llamara la funcion = numero de genes del indoviduo
+print(toolbox.individual())
+print(toolbox.individual())
+print(toolbox.individual())
+
+def crea_individuo(a, b, n):
+    individuo = [int(random.uniform(a, b)) for i in range(n)] 
+    return individuo
+
+crea_individuo(1,7,7)    # parametros [dia,franja,aula,piso,profesor,numcurso,indice-curso]
+
+#CREACION DE LA POBLACIÓN
+toolbox.register("population", tools.initRepeat, list, toolbox.individual, 30)
+toolbox.population()
+
+#FUNCIÓN OBJETIVO
+def funcion_objetivo(x):
+
+
+    for i in range(len(x)):
+        if x[i] > 8 or x[i] < 2:
+            return -1,
+    return res
+    
+    
+    #OPERACIONES GENETICAS
+
+toolbox.register("evaluate", funcion_objetivo) #evaluacion de la función objetivo
+toolbox.register("mate", tools.cxOnePoint) #cruce
+toolbox.register("mutate",  tools.mutShuffleIndexes, mu=0,sigma= 5, indpb=0.1)  #mutación
+toolbox.register("select", tools.selTournament, tournsize=3) #selección
+
+
+def main():
+    CXPB, MUTPB, NGEN = 0.5, 0.2, 20
+    pop = toolbox.population() 
+    hof = tools.HallOfFame(1) 
+    stats = tools.Statistics(lambda ind: ind.fitness.values) 
+    stats.register("avg", np.mean)
+    stats.register("std", np.std)
+    stats.register("min", np.min)
+    stats.register("max", np.max)
+    logbook = tools.Logbook()
+    pop, logbook = algorithms.eaSimple(pop, toolbox, cxpb=CXPB, 
+                                       mutpb=MUTPB, ngen=NGEN, stats=stats, 
+                                       halloffame=hof, verbose=True)
+    return hof 
+
+
+if __name__ == "__main__":
+    random.seed(42)
+    lista_mejores = list()  
+    for i in range(20): 
+        best = main()
+        lista_mejores.append(best[0].fitness.values)
+    media = np.mean(lista_mejores)
+    mejor_total = max(lista_mejores)
+    print("media %f" % media)
+    print("mejor %f" % mejor_total)
